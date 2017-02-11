@@ -91,7 +91,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void openPlayersActivity() {
-        Intent i = new Intent(LoginActivity.this, PlayersActivity.class);
+        Intent i = new Intent(LoginActivity.this, MainActivity.class);
         startActivity(i);
         finish();
     }

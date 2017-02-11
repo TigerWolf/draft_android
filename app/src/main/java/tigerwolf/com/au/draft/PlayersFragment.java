@@ -5,9 +5,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
@@ -17,32 +19,37 @@ import tigerwolf.com.au.draft.models.Player;
 import tigerwolf.com.au.draft.utils.PlayersAdapter;
 import tigerwolf.com.au.draft.utils.PlayersService;
 
-public class PlayersActivity extends AppCompatActivity {
+public class PlayersFragment extends Fragment {
 
     private BroadcastReceiver receiver;
 
     private ListView mListViewPlayers;
     private ProgressDialog dialog;
 
+    private View view;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_players);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        setHasOptionsMenu(true);
+
+        view = inflater.inflate(R.layout.activity_players, container, false);
 
         // Links the ListView on the xml to the variable
         this.linkListViewPlayers();
 
         // Loads data
         this.reloadPlayersList();
+
+        return view;
     }
 
     private void reloadPlayersList() {
-        PlayersService.getInstance().loadPlayers(getApplicationContext());
+        PlayersService.getInstance().loadPlayers(getActivity());
         createLoadingDialog();
     }
 
     private void createLoadingDialog() {
-        dialog = new ProgressDialog(this);
+        dialog = new ProgressDialog(getActivity());
         dialog.setMessage("Loading players");
         dialog.show();
     }
@@ -52,8 +59,8 @@ public class PlayersActivity extends AppCompatActivity {
     private void linkListViewPlayers() {
         List<Player> players = PlayersService.getInstance().playerList;
 
-        this.mListViewPlayers = (ListView) findViewById(R.id.activity_players_list_view);
-        this.mListViewPlayers.setAdapter(new PlayersAdapter(getApplicationContext(), players));
+        this.mListViewPlayers = (ListView) view.findViewById(R.id.activity_players_list_view);
+        this.mListViewPlayers.setAdapter(new PlayersAdapter(getContext(), players));
         this.mListViewPlayers.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
@@ -73,12 +80,12 @@ public class PlayersActivity extends AppCompatActivity {
             }
         };
 
-        registerReceiver(receiver, new IntentFilter(PlayersService.LOADING_PLAYERS_FINISHED));
+        getActivity().registerReceiver(receiver, new IntentFilter(PlayersService.LOADING_PLAYERS_FINISHED));
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(receiver);
+        getActivity().unregisterReceiver(receiver);
     }
 }
