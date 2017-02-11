@@ -36,6 +36,7 @@ public class PlayersService {
     // Default strings for broadcast
     // We use this because the request is assynchronous
     public static final String LOADING_PLAYERS_FINISHED = "loading_players_finished";
+    public static final String PLAYERS_LIST_CHANGED = "players_list_changed";
 
     public List<Player> playerList = new ArrayList<Player>();
 
@@ -68,6 +69,24 @@ public class PlayersService {
         }).start();
     }
 
+    public List<Player> getDraftedPlayers() {
+        List<Player> draftedPlayers = new ArrayList<Player>();
+        for (Player p : playerList) {
+            if (p.isDrafted()) {
+                draftedPlayers.add(p);
+            }
+        }
+        return draftedPlayers;
+    }
+
+    public void togglePlayerDraftedStatus(Player player) {
+        for(Player p : playerList) {
+            if (p.equals(player)) {
+                p.toggleDrafted();
+                return;
+            }
+        }
+    }
 
     protected PlayersService() {
         // Exists only to defeat instantiation.

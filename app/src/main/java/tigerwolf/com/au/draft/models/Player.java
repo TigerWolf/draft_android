@@ -14,6 +14,7 @@ public class Player {
     private String surname;
     private String photoURL;
     private int jumper;
+    private boolean drafted = false;
     private Team team;
 
     public String getId() {
@@ -74,5 +75,32 @@ public class Player {
                 ", jumper=" + jumper +
                 ", team=" + team +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Player player = (Player) o;
+
+        return id.equals(player.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    public boolean isDrafted() {
+        return drafted;
+    }
+
+    public void setDrafted(boolean drafted) {
+        this.drafted = drafted;
+    }
+
+    public void toggleDrafted() {
+        this.drafted = ! this.drafted;
     }
 }

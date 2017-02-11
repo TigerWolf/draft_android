@@ -3,11 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_players"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="tigerwolf.com.au.draft.PlayersActivity">
+    android:layout_height="match_parent">
 
     <ListView
-        android:id="@+id/activity_players_list_view"
+        android:id="@+id/fragment_team_list_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 

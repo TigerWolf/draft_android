@@ -2,6 +2,7 @@ package tigerwolf.com.au.draft.utils;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.Icon;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +16,7 @@ import com.joanzapata.iconify.widget.IconTextView;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import tigerwolf.com.au.draft.R;
@@ -27,7 +29,7 @@ import tigerwolf.com.au.draft.models.Player;
 public class PlayersAdapter extends BaseAdapter {
 
     private static LayoutInflater mInflater = null;
-    private static List<Player> mPlayers;
+    private List<Player> mPlayers;
     private Context context;
 
     public PlayersAdapter(Context context, List<Player> players) {
@@ -56,6 +58,7 @@ public class PlayersAdapter extends BaseAdapter {
         IconTextView iconTextViewLoading;
         TextView textViewPlayerName;
         TextView textViewTeamAbbr;
+        IconTextView iconTextViewCheck;
     }
 
     @Override
@@ -63,16 +66,24 @@ public class PlayersAdapter extends BaseAdapter {
         final Holder holder = new Holder();
         View rowView;
         rowView = mInflater.inflate(R.layout.list_players_row, null);
+        Player player = mPlayers.get(position);
 
         // findViewById
         holder.iconTextViewLoading = (IconTextView) rowView.findViewById(R.id.list_players_row_loading);
         holder.textViewPlayerName  = (TextView) rowView.findViewById(R.id.list_players_row_name);
         holder.textViewTeamAbbr    = (TextView) rowView.findViewById(R.id.list_players_row_team);
         holder.imageViewPlayer     = (ImageView) rowView.findViewById(R.id.list_players_row_picture);
+        holder.iconTextViewCheck   = (IconTextView) rowView.findViewById(R.id.list_players_row_check);
 
         // Text information
-        holder.textViewPlayerName.setText(mPlayers.get(position).getGivenName() + " " + mPlayers.get(position).getSurname());
-        holder.textViewTeamAbbr.setText(mPlayers.get(position).getTeam().getAbbreviation());
+        holder.textViewPlayerName.setText(player.getGivenName() + " " + player.getSurname());
+        holder.textViewTeamAbbr.setText(player.getTeam().getAbbreviation());
+
+        if (player.isDrafted()) {
+            holder.iconTextViewCheck.setVisibility(View.VISIBLE);
+        } else {
+            holder.iconTextViewCheck.setVisibility(View.GONE);
+        }
 
         // Assync image loading
         Picasso.with(context)
@@ -107,5 +118,11 @@ public class PlayersAdapter extends BaseAdapter {
             holder.iconTextViewLoading.setVisibility(View.GONE);
             holder.imageViewPlayer.setVisibility(View.VISIBLE);
         }
+    }
+
+    public void updatePlayers(List<Player> players) {
+        mPlayers = players;
+        //Triggers the list update
+        notifyDataSetChanged();
     }
 }

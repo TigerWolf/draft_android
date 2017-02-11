@@ -34,14 +34,16 @@ public class MainActivity extends AppCompatActivity {
             switch (position) {
                 case 0:
                     return new PlayersFragment();
+                case 1:
+                    return new TeamFragment();
                 default:
-                    return new PlayersFragment();
+                    return null;
             }
         }
 
         @Override
         public int getCount() {
-            return 1;
+            return 2;
         }
 
         @Override
@@ -49,8 +51,10 @@ public class MainActivity extends AppCompatActivity {
             switch (position) {
                 case 0:
                     return "Players";
+                case 1:
+                    return "Team";
                 default:
-                    return "Players";
+                    return "";
             }
         }
     }
