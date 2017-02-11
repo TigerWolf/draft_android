@@ -30,6 +30,13 @@ dependencies {
     // OkHttp
     compile 'com.squareup.okhttp3:okhttp:3.6.0'
 
+    // Assync image loader
+    compile 'com.koushikdutta.ion:ion:2.+'
+    compile 'com.squareup.picasso:picasso:2.5.2'
+
+    // Animations
+    compile 'com.wang.avi:library:2.1.3'
+
     // Gson
     compile group: 'com.google.code.gson', name: 'gson', version: '2.8.0'
 
