@@ -16,7 +16,11 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import tigerwolf.com.au.draft.models.Player;
+import tigerwolf.com.au.draft.models.Team;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
 /**
@@ -28,7 +32,7 @@ public class PlayersService {
     private static PlayersService instance = null;
 
     // Server URL
-    private String url = "http://challengecup.club:8080/api/v1/drafts/players";
+    private String url = "http://challengecup.club:8080/api/v1/drafts";
 
     // OkHttp resources
     private final OkHttpClient client = new OkHttpClient();
@@ -48,7 +52,7 @@ public class PlayersService {
                 List<Player> players = new ArrayList<Player>();
                 try {
                     Request request = new Request.Builder()
-                            .url(url)
+                            .url(url + "/players")
                             .build();
 
                     Response response = client.newCall(request).execute();
@@ -64,6 +68,46 @@ public class PlayersService {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 } finally {
+                    // After requesting player's list, load the drafted ones
+                    loadDraftedPlayers(context);
+                }
+            }
+        }).start();
+    }
+
+    public void loadDraftedPlayers(final Context context) {
+        (new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Request request = new Request.Builder()
+                            .url(url)
+                            .build();
+
+                    Response response = client.newCall(request).execute();
+                    String json = response.body().string();
+
+                    Gson gson = new Gson();
+                    JsonParser parser = new JsonParser();
+                    JsonObject rootObj = parser.parse(json).getAsJsonObject();
+
+                    clearDraftedStatusCache();
+
+                    // For each element in the data array
+                    for(JsonElement e : rootObj.getAsJsonArray("data")) {
+                        // Get player id
+                        String draftedPlayerId = e.getAsJsonObject().get("player_id").getAsString();
+                        // Search in the player's list
+                        for (Player p : playerList) {
+                            if (p.getId().equals(draftedPlayerId)) {
+                                p.setDrafted(true);
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                } finally {
+                    // Finished
                     Intent i = new Intent(LOADING_PLAYERS_FINISHED);
                     context.sendBroadcast(i);
                 }
@@ -87,6 +131,12 @@ public class PlayersService {
                 p.toggleDrafted();
                 return;
             }
+        }
+    }
+
+    private void clearDraftedStatusCache() {
+        for (Player p : playerList) {
+            p.setDrafted(false);
         }
     }
 
