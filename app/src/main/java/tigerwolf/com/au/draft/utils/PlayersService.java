@@ -8,6 +8,7 @@ import com.google.gson.GsonBuilder;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import okhttp3.MediaType;
@@ -59,6 +60,7 @@ public class PlayersService {
 
                     Type listType = new TypeToken<List<Player>>() {}.getType();
                     playerList = gson.fromJson(json, listType);
+                    Collections.sort(playerList);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 } finally {
@@ -86,6 +88,19 @@ public class PlayersService {
                 return;
             }
         }
+    }
+
+    public List<Player> getFilteredPlayers(String name) {
+        List<Player> filteredPlayers = new ArrayList<Player>();
+        for(Player p : playerList) {
+            String searchName = name.toUpperCase();
+            String givenName  = p.getGivenName().toUpperCase();
+            String surname    = p.getSurname().toUpperCase();
+            if (givenName.contains(searchName) || surname.contains(searchName)) {
+                filteredPlayers.add(p);
+            }
+        }
+        return filteredPlayers;
     }
 
     protected PlayersService() {

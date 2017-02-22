@@ -1,6 +1,7 @@
 package tigerwolf.com.au.draft;
 
 import android.app.ProgressDialog;
+import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -8,8 +9,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.SearchView;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -112,6 +119,17 @@ public class PlayersFragment extends Fragment {
         getContext().sendBroadcast(i);
     }
 
+    private void handleSearch(String value) {
+        // Clears
+        if (value == null) {
+            List<Player> players = PlayersService.getInstance().playerList;
+            playersAdapter.updatePlayers(players);
+        } else {
+            List<Player> filteredPlayers = PlayersService.getInstance().getFilteredPlayers(value);
+            playersAdapter.updatePlayers(filteredPlayers);
+        }
+    }
+
     @Override
     public void onResume() {
         super.onResume();
@@ -139,5 +157,42 @@ public class PlayersFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         getActivity().unregisterReceiver(playerListLoadedReceiver);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.players_menu, menu);
+
+        SearchManager searchManager = (SearchManager) getActivity().getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView = (SearchView) menu.findItem(R.id.search).getActionView();
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getActivity().getComponentName()));
+        searchView.setIconifiedByDefault(true);
+
+        // Text changed listers
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextChange(String query) {
+                handleSearch(query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                handleSearch(query);
+                return false;
+            }
+        });
+
+        // OnClose listener: http://stackoverflow.com/questions/13920960/searchview-oncloselistener-does-not-get-invoked/14622049#14622049
+        searchView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
+            @Override
+            public void onViewDetachedFromWindow(View arg0) {
+                handleSearch(null);
+            }
+
+            @Override
+            public void onViewAttachedToWindow(View arg0) {}
+        });
     }
 }
