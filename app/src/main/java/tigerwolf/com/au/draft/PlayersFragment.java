@@ -114,7 +114,7 @@ public class PlayersFragment extends Fragment {
             public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
                 String message = "Do you want to draft this player?";
                 if (PlayersService.getInstance().playerList.get(pos).isDrafted()) {
-                    message = "Do you want to remove this player from your team?";
+                    return;
                 }
 
                 createConfirmationDialog(message, pos);

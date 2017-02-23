@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import tigerwolf.com.au.draft.models.Player;
@@ -26,7 +27,7 @@ public class TeamFragment extends Fragment {
     private ListView mListViewTeam;
 
     private PlayersAdapter playersAdapter;
-    private List<Player>   players;
+    private List<Player>   players = new ArrayList<Player>();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -40,8 +41,6 @@ public class TeamFragment extends Fragment {
     }
 
     private void linkListViewTeam() {
-        this.players = PlayersService.getInstance().getDraftedPlayers();
-
         this.playersAdapter = new PlayersAdapter(getContext(), players);
         this.mListViewTeam = (ListView) view.findViewById(R.id.fragment_team_list_view);
         this.mListViewTeam.setAdapter(this.playersAdapter);
@@ -60,12 +59,12 @@ public class TeamFragment extends Fragment {
         playerListUpdateReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                players = PlayersService.getInstance().getDraftedPlayers();
+                players = PlayersService.getInstance().getMyTeamPlayers();
                 playersAdapter.updatePlayers(players);
             }
         };
 
-        getActivity().registerReceiver(playerListUpdateReceiver, new IntentFilter(PlayersService.PLAYERS_LIST_CHANGED));
+        getActivity().registerReceiver(playerListUpdateReceiver, new IntentFilter(PlayersService.TEAM_LIST_CHANGED));
     }
 
     @Override
