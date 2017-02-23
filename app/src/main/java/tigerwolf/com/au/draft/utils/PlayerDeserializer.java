@@ -25,8 +25,16 @@ public class PlayerDeserializer implements JsonDeserializer<Player> {
         JsonObject obj = json.getAsJsonObject();
         Gson gson = new GsonBuilder().create();
 
-        Player player = gson.fromJson(obj, Player.class);
-        Team team = gson.fromJson(obj, Team.class);
+        Player player;
+        Team   team = gson.fromJson(obj, Team.class);
+
+        if (obj.get("positions").isJsonArray()) {
+            player = gson.fromJson(obj, Player.class);
+        } else {
+            // There are some players with empty positions, Gson recognizes as empty string. Ex: ""
+            obj.remove("positions");
+            player = gson.fromJson(obj, Player.class);
+        }
 
         player.setTeam(team);
 

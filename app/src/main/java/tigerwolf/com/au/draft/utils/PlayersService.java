@@ -10,13 +10,19 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 import tigerwolf.com.au.draft.models.Player;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
 /**
@@ -25,10 +31,17 @@ import com.google.gson.reflect.TypeToken;
 
 public class PlayersService {
 
+    public enum RequestType {
+        LOAD_PLAYERS, DRAFT_PLAYER
+    }
+
     private static PlayersService instance = null;
 
     // Server URL
-    private String url = "http://challengecup.club:8080/api/v1/drafts/players";
+    private String url = "http://challengecup.club:8080/api/v1/drafts";
+
+    public int errorCode = 0; // Last error code
+    public List<String> errorField = new ArrayList<String>();
 
     // OkHttp resources
     private final OkHttpClient client = new OkHttpClient();
@@ -38,9 +51,14 @@ public class PlayersService {
     // We use this because the request is assynchronous
     public static final String LOADING_PLAYERS_FINISHED = "loading_players_finished";
     public static final String PLAYERS_LIST_CHANGED = "players_list_changed";
+    public static final String PLAYER_DRAFTED = "players_drafted";
 
     public List<Player> playerList = new ArrayList<Player>();
 
+    /**
+     * Loads all players in the server
+     * @param context
+     */
     public void loadPlayers(final Context context) {
         (new Thread() {
             @Override
@@ -48,7 +66,7 @@ public class PlayersService {
                 List<Player> players = new ArrayList<Player>();
                 try {
                     Request request = new Request.Builder()
-                            .url(url)
+                            .url(url + "/players")
                             .build();
 
                     Response response = client.newCall(request).execute();
@@ -64,13 +82,109 @@ public class PlayersService {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 } finally {
-                    Intent i = new Intent(LOADING_PLAYERS_FINISHED);
-                    context.sendBroadcast(i);
+                    // After requesting player's list, load the drafted ones
+                    refreshDraftedPlayers(context, RequestType.LOAD_PLAYERS);
                 }
             }
         }).start();
     }
 
+    /**
+     * Refresh the playerList draft status, based on the server
+     * @param context
+     * @param requestType The type of the request that called this function. It's used to broadcast the correct String.
+     */
+    public void refreshDraftedPlayers(final Context context, final RequestType requestType) {
+        (new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Request request = new Request.Builder()
+                            .url(url)
+                            .build();
+
+                    Response response = client.newCall(request).execute();
+                    String json = response.body().string();
+
+                    JsonParser parser = new JsonParser();
+                    JsonObject rootObj = parser.parse(json).getAsJsonObject();
+
+                    clearDraftedStatusCache();
+
+                    // For each element in the data array
+                    for(JsonElement e : rootObj.getAsJsonArray("data")) {
+                        // Get player id
+                        String draftedPlayerId = e.getAsJsonObject().get("player_id").getAsString();
+                        // Search in the player's list
+                        for (Player p : playerList) {
+                            if (p.getId().equals(draftedPlayerId)) {
+                                p.setDrafted(true);
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                } finally {
+                    // Finished
+                    broadcast(requestType, context);
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * Sends a POST request to the server to draft a player
+     * @param playerId
+     * @param position
+     * @param context
+     */
+    public void postDraftStatus(final String playerId, final String position, final Context context) {
+        (new Thread() {
+            @Override
+            public void run() {
+                try {
+                    errorCode = 0;
+                    String json = createJson(playerId, position);
+
+                    RequestBody body = RequestBody.create(JSON, json);
+                    Request request = new Request.Builder()
+                            .url(url)
+                            .post(body)
+                            .addHeader("Authorization", LoginService.getInstance().token.getValue())
+                            .build();
+                    Response response = client.newCall(request).execute();
+                    JsonParser parser = new JsonParser();
+
+                    // Checks if the request was successful
+                    if (!response.isSuccessful()) {
+                        errorCode = response.code();
+
+                        if (errorCode == 422) {
+                            JsonObject obj = (JsonObject) parser.parse(response.body().string());
+                            Set<Map.Entry<String, JsonElement>> entries = obj.get("errors").getAsJsonObject().entrySet();
+                            for (Map.Entry<String, JsonElement> entry: entries) {
+                                errorField.add(entry.getKey());
+                            }
+                            System.out.println(errorField);
+                        }
+                    }
+
+                    if (response.code() == 201) {
+                        // Do something?
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                } finally {
+                    refreshDraftedPlayers(context, RequestType.DRAFT_PLAYER);
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * Return a list of all drafted players
+     * @return
+     */
     public List<Player> getDraftedPlayers() {
         List<Player> draftedPlayers = new ArrayList<Player>();
         for (Player p : playerList) {
@@ -81,15 +195,35 @@ public class PlayersService {
         return draftedPlayers;
     }
 
-    public void togglePlayerDraftedStatus(Player player) {
+    /**
+     * Function that drafts a player. It posts a request to the server and then refresh the draft status
+     * of all players calling the function "refreshDraftedPlayers"
+     * @param player playerId and playerPositions
+     * @param context
+     */
+    public void draftPlayer(Player player, Context context) {
         for(Player p : playerList) {
             if (p.equals(player)) {
-                p.toggleDrafted();
+                postDraftStatus(player.getId(), player.getPositionsAsString(), context);
                 return;
             }
         }
     }
 
+    /**
+     * Clears the draft status of all players in the playerList
+     */
+    private void clearDraftedStatusCache() {
+        for (Player p : playerList) {
+            p.setDrafted(false);
+        }
+    }
+
+    /**
+     * Returns a list of players based on the name
+     * @param name filter
+     * @return
+     */
     public List<Player> getFilteredPlayers(String name) {
         List<Player> filteredPlayers = new ArrayList<Player>();
         for(Player p : playerList) {
@@ -101,6 +235,35 @@ public class PlayersService {
             }
         }
         return filteredPlayers;
+    }
+
+    /**
+     * Broacasts a message to stop any loading dialogs in the activity
+     * @param afterRequest Which resquest caused that refresh
+     * @param context
+     */
+    private void broadcast(RequestType afterRequest, Context context) {
+        Intent i;
+        switch (afterRequest) {
+            case LOAD_PLAYERS:
+                i = new Intent(LOADING_PLAYERS_FINISHED);
+                context.sendBroadcast(i);
+                break;
+            case DRAFT_PLAYER:
+                i = new Intent(PLAYER_DRAFTED);
+                context.sendBroadcast(i);
+                break;
+        }
+    }
+
+    /**
+     * Used to submit data when drafting a player
+     * @param playerId
+     * @param position
+     * @return
+     */
+    private String createJson(String playerId, String position) {
+        return "{\"draft\":{\"player_id\":\"" + playerId + "\",\"position\":\"" + position + "\"}}";
     }
 
     protected PlayersService() {
