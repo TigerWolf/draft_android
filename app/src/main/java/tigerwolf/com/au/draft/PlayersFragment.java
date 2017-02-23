@@ -9,14 +9,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SearchView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -32,6 +29,7 @@ public class PlayersFragment extends Fragment {
 
     private BroadcastReceiver playerListLoadedReceiver;
     private BroadcastReceiver playerListUpdatedReceiver;
+    private BroadcastReceiver playerDrafted;
 
     private PlayersAdapter playersAdapter;
     private ListView       mListViewPlayers;
@@ -88,6 +86,20 @@ public class PlayersFragment extends Fragment {
         });
     }
 
+    private void displayInformationDialog(String message) {
+        this.confirmDialogBuilder = new AlertDialog.Builder(getContext());
+        this.confirmDialogBuilder.setTitle("Draft");
+        this.confirmDialogBuilder.setMessage(message);
+
+        this.confirmDialogBuilder.setNegativeButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        this.confirmDialogBuilder.show();
+    }
+
     // Function that links the ListView on the XML
     // This is also used to refresh the page when received a broadcast
     private void linkListViewPlayers() {
@@ -113,10 +125,8 @@ public class PlayersFragment extends Fragment {
     }
 
     private void draftPlayer(int pos) {
-        PlayersService.getInstance().togglePlayerDraftedStatus(this.players.get(pos));
-
-        Intent i = new Intent(PlayersService.PLAYERS_LIST_CHANGED);
-        getContext().sendBroadcast(i);
+        createLoadingDialog();
+        PlayersService.getInstance().draftPlayer(this.players.get(pos), getContext());
     }
 
     private void handleSearch(String value) {
@@ -149,8 +159,21 @@ public class PlayersFragment extends Fragment {
             }
         };
 
+        playerDrafted = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                playersAdapter.notifyDataSetChanged();
+                progressDialog.dismiss();
+
+                if (PlayersService.getInstance().errorCode == 422) {
+                    displayInformationDialog("This player has already been drafted.");
+                }
+            }
+        };
+
         getActivity().registerReceiver(playerListLoadedReceiver, new IntentFilter(PlayersService.LOADING_PLAYERS_FINISHED));
         getActivity().registerReceiver(playerListUpdatedReceiver, new IntentFilter(PlayersService.PLAYERS_LIST_CHANGED));
+        getActivity().registerReceiver(playerDrafted, new IntentFilter(PlayersService.PLAYER_DRAFTED));
     }
 
     @Override

@@ -48,10 +48,7 @@ public class TeamFragment extends Fragment {
         this.mListViewTeam.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int pos, long l) {
-                PlayersService.getInstance().togglePlayerDraftedStatus(players.get(pos));
-
-                Intent i = new Intent(PlayersService.PLAYERS_LIST_CHANGED);
-                getContext().sendBroadcast(i);
+            // TODO: Remove player from the team list
             }
         });
     }
