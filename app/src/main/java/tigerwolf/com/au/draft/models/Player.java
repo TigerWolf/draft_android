@@ -2,6 +2,8 @@ package tigerwolf.com.au.draft.models;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.List;
+
 /**
  * Created by Henrique on 10/02/2017.
  */
@@ -15,6 +17,7 @@ public class Player implements Comparable<Player> {
     private String photoURL;
     private int jumper;
     private boolean drafted = false;
+    private List<String> positions = null;
     private Team team;
 
     public String getId() {
@@ -65,6 +68,18 @@ public class Player implements Comparable<Player> {
         this.team = team;
     }
 
+    public String getPositionsAsString() {
+        if (getPositions() == null || getPositions().size() == 0) return "";
+
+        StringBuilder result = new StringBuilder();
+
+        for(String p : getPositions()) {
+            result.append(p).append(" ");
+        }
+
+        return result.toString().substring(0, result.toString().length() - 2);
+    }
+
     @Override
     public String toString() {
         return "Player{" +
@@ -109,5 +124,13 @@ public class Player implements Comparable<Player> {
         String myName = givenName + " " + surname;
         String hisName = o.givenName + " " + o.surname;
         return myName.compareTo(hisName);
+    }
+
+    public List<String> getPositions() {
+        return positions;
+    }
+
+    public void setPositions(List<String> positions) {
+        this.positions = positions;
     }
 }
