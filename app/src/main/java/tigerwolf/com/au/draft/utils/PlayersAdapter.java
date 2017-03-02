@@ -86,20 +86,25 @@ public class PlayersAdapter extends BaseAdapter {
         }
 
         // Assync image loading
-        Picasso.with(context)
-                .load(mPlayers.get(position).getPhotoURL())
-                .into(holder.imageViewPlayer, new Callback() {
-                    @Override
-                    public void onSuccess() { // Swaps display (ImageView <-> IconTextView)
-                        displayLoadingSpinner(holder, false);
-                    }
+        if (player.getPhotoURL() == null) {
+            displayLoadingSpinner(holder, false);
+            holder.imageViewPlayer.setImageDrawable(createErrorDrawable());
+        } else {
+            Picasso.with(context)
+                    .load(mPlayers.get(position).getPhotoURL())
+                    .into(holder.imageViewPlayer, new Callback() {
+                        @Override
+                        public void onSuccess() { // Swaps display (ImageView <-> IconTextView)
+                            displayLoadingSpinner(holder, false);
+                        }
 
-                    @Override
-                    public void onError() {
-                        displayLoadingSpinner(holder, false);
-                        holder.imageViewPlayer.setImageDrawable(createErrorDrawable());
-                    }
-                });
+                        @Override
+                        public void onError() {
+                            displayLoadingSpinner(holder, false);
+                            holder.imageViewPlayer.setImageDrawable(createErrorDrawable());
+                        }
+                    });
+        }
 
         return rowView;
     }

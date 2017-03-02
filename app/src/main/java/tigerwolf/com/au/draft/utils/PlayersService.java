@@ -52,11 +52,12 @@ public class PlayersService {
     public static final String LOADING_PLAYERS_FINISHED = "loading_players_finished";
     public static final String PLAYERS_LIST_CHANGED = "players_list_changed";
     public static final String PLAYER_DRAFTED = "players_drafted";
+    public static final String TEAM_LIST_CHANGED = "team_list_changed";
 
     public List<Player> playerList = new ArrayList<Player>();
 
     /**
-     * Loads all players in the server
+     * Loads all players in the server. Every time it loads the player's list, it loads the team list too.
      * @param context
      */
     public void loadPlayers(final Context context) {
@@ -84,6 +85,8 @@ public class PlayersService {
                 } finally {
                     // After requesting player's list, load the drafted ones
                     refreshDraftedPlayers(context, RequestType.LOAD_PLAYERS);
+                    // Loads the team list
+                    loadMyTeam(context);
                 }
             }
         }).start();
@@ -133,7 +136,9 @@ public class PlayersService {
     }
 
     /**
-     * Sends a POST request to the server to draft a player
+     * Sends a POST request to the server to draft a player.
+     * After sending the POST, it syncs the drafted status with the server
+     * and syncs the team list
      * @param playerId
      * @param position
      * @param context
@@ -165,7 +170,6 @@ public class PlayersService {
                             for (Map.Entry<String, JsonElement> entry: entries) {
                                 errorField.add(entry.getKey());
                             }
-                            System.out.println(errorField);
                         }
                     }
 
@@ -176,6 +180,47 @@ public class PlayersService {
                     ex.printStackTrace();
                 } finally {
                     refreshDraftedPlayers(context, RequestType.DRAFT_PLAYER);
+                    loadMyTeam(context);
+                }
+            }
+        }).start();
+    }
+
+    public void loadMyTeam(final Context context) {
+        (new Thread() {
+            @Override
+            public void run() {
+                List<Player> players = new ArrayList<Player>();
+                try {
+                    Request request = new Request.Builder()
+                            .url(url + "/me")
+                            .addHeader("Authorization", LoginService.getInstance().token.getValue())
+                            .build();
+
+                    Response response = client.newCall(request).execute();
+                    String json = response.body().string();
+
+                    JsonParser parser = new JsonParser();
+                    JsonObject rootObj = parser.parse(json).getAsJsonObject();
+
+                    clearDraftedStatusCache();
+
+                    // For each element in the data array
+                    for(JsonElement e : rootObj.getAsJsonArray("data")) {
+                        // Get player id
+                        String draftedPlayerId = e.getAsJsonObject().get("player_id").getAsString();
+                        // Search in the player's list
+                        for (Player p : playerList) {
+                            if (p.getId().equals(draftedPlayerId)) {
+                                p.setMyTeam(true);
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                } finally {
+                    Intent i = new Intent(TEAM_LIST_CHANGED);
+                    context.sendBroadcast(i);
                 }
             }
         }).start();
@@ -235,6 +280,18 @@ public class PlayersService {
             }
         }
         return filteredPlayers;
+    }
+
+    public List<Player> getMyTeamPlayers() {
+        List<Player> myTeam = new ArrayList<Player>();
+
+        for(Player p : playerList) {
+            if (p.isMyTeam()) {
+                myTeam.add(p);
+            }
+        }
+
+        return myTeam;
     }
 
     /**

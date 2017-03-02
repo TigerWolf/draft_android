@@ -19,6 +19,7 @@ public class Player implements Comparable<Player> {
     private boolean drafted = false;
     private List<String> positions = null;
     private Team team;
+    private transient boolean myTeam = false;
 
     public String getId() {
         return id;
@@ -132,5 +133,13 @@ public class Player implements Comparable<Player> {
 
     public void setPositions(List<String> positions) {
         this.positions = positions;
+    }
+
+    public boolean isMyTeam() {
+        return myTeam;
+    }
+
+    public void setMyTeam(boolean myTeam) {
+        this.myTeam = myTeam;
     }
 }
