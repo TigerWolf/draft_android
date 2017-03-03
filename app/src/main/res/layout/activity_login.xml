@@ -16,7 +16,7 @@
         android:hint="Username"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="henrique" />
+        android:text="henrique.guarnieri@gmail.com" />
 
     <EditText
         android:id="@+id/activity_login_input_pass"
@@ -24,7 +24,7 @@
         android:inputType="textPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="test4" />
+        android:text="henrique123" />
 
     <Button
         android:id="@+id/activity_login_button_login"

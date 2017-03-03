@@ -70,13 +70,12 @@ public class LoginActivity extends AppCompatActivity {
 
         if (LoginService.getInstance().token.isLoggedIn()) {
             message = "Sucess!";
+            openPlayersActivity();
         } else {
             message = "Whoops :( Error code: " + LoginService.getInstance().errorCode;
         }
 
         displayMessage(message);
-
-        openPlayersActivity();
     }
 
     private void manageLoginFailedResponse() {
