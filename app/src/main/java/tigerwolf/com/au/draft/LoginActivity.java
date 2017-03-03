@@ -1,10 +1,10 @@
 package tigerwolf.com.au.draft;
 
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -12,13 +12,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import java.io.IOException;
-
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 import tigerwolf.com.au.draft.utils.LoginService;
 
 public class LoginActivity extends AppCompatActivity {
@@ -27,7 +20,12 @@ public class LoginActivity extends AppCompatActivity {
     private EditText mPassInput;
     private Button   mLoginButton;
 
+    // Register a receiver to update the screen when receives a broadcast
     private BroadcastReceiver receiver;
+    private ProgressDialog progressDialog;
+
+    // Stores LoginActivity reference to be used while creating the loading progressDialog
+    private LoginActivity loginActivity = this;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,16 +57,14 @@ public class LoginActivity extends AppCompatActivity {
                 } else if (pass == null || pass.isEmpty()) {
                     displayMessage("Empty password");
                 } else {
+                    createLoadingDialog();
                     LoginService.getInstance().login(user, pass, getApplicationContext());
                 }
             }
         });
     }
 
-    private void displayMessage(String message) {
-        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
-    }
-
+    // Function that handles the login after receiveing the broadcast
     private void manageLoginResponse() {
         String message;
 
@@ -79,6 +75,30 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         displayMessage(message);
+
+        openPlayersActivity();
+    }
+
+    private void manageLoginFailedResponse() {
+        String message = "Could not login - check your username and password.";
+        displayMessage(message);
+    }
+
+    // Creates a small Toast to display some message
+    private void displayMessage(String message) {
+        Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void createLoadingDialog() {
+        progressDialog = new ProgressDialog(loginActivity);
+        progressDialog.setMessage("Logging in");
+        progressDialog.show();
+    }
+
+    private void openPlayersActivity() {
+        Intent i = new Intent(LoginActivity.this, MainActivity.class);
+        startActivity(i);
+        finish();
     }
 
     @Override
@@ -88,6 +108,17 @@ public class LoginActivity extends AppCompatActivity {
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                progressDialog.dismiss();
+                manageLoginFailedResponse();
+            }
+        };
+
+        registerReceiver(receiver, new IntentFilter(LoginService.LOGIN_PROCESS_FAILED));
+
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                progressDialog.dismiss();
                 manageLoginResponse();
             }
         };

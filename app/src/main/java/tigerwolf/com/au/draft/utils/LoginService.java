@@ -27,7 +27,8 @@ public class LoginService {
     private static LoginService instance = null;
 
     // Server URL
-    private String url = "http://challengecup.club:8080/api/v1/sessions";
+    private String url = "http://challengecup.club:8080/api/v1/auth/session";
+//    private String url = "http://10.0.2.2:4000/api/v1/auth/session";
 
     // OkHttp resources
     private final OkHttpClient client = new OkHttpClient();
@@ -36,6 +37,7 @@ public class LoginService {
     // Default strings for broadcast
     // We use this because the request is assynchronous
     public static final String LOGIN_PROCESS_FINISHED = "login_finished";
+    public static final String LOGIN_PROCESS_FAILED = "login_failed";
 
     public Token token = new Token(); // Stores the token
     public int errorCode = 0; // Last error code
@@ -50,6 +52,7 @@ public class LoginService {
         (new Thread() {
             @Override
             public void run() {
+                boolean success = false;
                 try {
                     token.clearToken();
                     errorCode = 0;
@@ -74,11 +77,17 @@ public class LoginService {
 
                     token.setToken(jo.get("token").getAsString());
                     token.setLoggedIn(true);
+                    success = true;
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 } finally {
-                    Intent i = new Intent(LOGIN_PROCESS_FINISHED);
-                    context.sendBroadcast(i);
+                    if (!success){
+                        Intent i = new Intent(LOGIN_PROCESS_FAILED);
+                        context.sendBroadcast(i);
+                    }else {
+                        Intent i = new Intent(LOGIN_PROCESS_FINISHED);
+                        context.sendBroadcast(i);
+                    }
                 }
             }
         }).start();
@@ -91,7 +100,7 @@ public class LoginService {
      * @return JSON string
      */
     private String createJson(String user, String pass) {
-        return "{\"email\":\"" + user + "\",\"password\":\"" + pass + "\"}";
+        return "{ \"user\": {\"email\":\"" + user + "\",\"password\":\"" + pass + "\"}}";
     }
 
     protected LoginService() {

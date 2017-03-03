@@ -15,14 +15,16 @@
         android:id="@+id/activity_login_input_user"
         android:hint="Username"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="henrique" />
 
     <EditText
         android:id="@+id/activity_login_input_pass"
         android:hint="Password"
         android:inputType="textPassword"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="test4" />
 
     <Button
         android:id="@+id/activity_login_button_login"
