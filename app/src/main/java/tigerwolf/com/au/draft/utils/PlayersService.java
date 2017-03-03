@@ -202,7 +202,7 @@ public class PlayersService {
                     JsonParser parser = new JsonParser();
                     JsonObject rootObj = parser.parse(json).getAsJsonObject();
 
-                    clearDraftedStatusCache();
+                    clearTeamStatusCache();
 
                     // For each element in the data array
                     for(JsonElement e : rootObj.getAsJsonArray("data")) {
@@ -241,7 +241,7 @@ public class PlayersService {
 
     /**
      * Function that drafts a player. It posts a request to the server and then refresh the draft status
-     * of all players calling the function "refreshDraftedPlayers"
+     * of all players calling the function "refreshDraftStatusOfPlayerList"
      * @param player playerId and playerPositions
      * @param context
      */
@@ -260,6 +260,15 @@ public class PlayersService {
     private void clearDraftedStatusCache() {
         for (Player p : playerList) {
             p.setDrafted(false);
+        }
+    }
+
+    /**
+     * Clears the team status of all players in the playerList
+     */
+    private void clearTeamStatusCache() {
+        for (Player p : playerList) {
+            p.setMyTeam(false);
         }
     }
 
