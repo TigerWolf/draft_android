@@ -79,6 +79,11 @@ public class LoginActivity extends AppCompatActivity {
         openPlayersActivity();
     }
 
+    private void manageLoginFailedResponse() {
+        String message = "Could not login - check your username and password.";
+        displayMessage(message);
+    }
+
     // Creates a small Toast to display some message
     private void displayMessage(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
@@ -99,6 +104,16 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
+
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                progressDialog.dismiss();
+                manageLoginFailedResponse();
+            }
+        };
+
+        registerReceiver(receiver, new IntentFilter(LoginService.LOGIN_PROCESS_FAILED));
 
         receiver = new BroadcastReceiver() {
             @Override
