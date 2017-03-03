@@ -20,8 +20,9 @@ public class LoginActivity extends AppCompatActivity {
     private EditText mPassInput;
     private Button   mLoginButton;
 
-    // Register a receiver to update the screen when receives a broadcast
-    private BroadcastReceiver receiver;
+    // Register a loginFailedReceiver to update the screen when receives a broadcast
+    private BroadcastReceiver loginFailedReceiver;
+    private BroadcastReceiver loginSucceededReceiver;
     private ProgressDialog progressDialog;
 
     // Stores LoginActivity reference to be used while creating the loading progressDialog
@@ -104,7 +105,7 @@ public class LoginActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
 
-        receiver = new BroadcastReceiver() {
+        loginFailedReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 progressDialog.dismiss();
@@ -112,9 +113,9 @@ public class LoginActivity extends AppCompatActivity {
             }
         };
 
-        registerReceiver(receiver, new IntentFilter(LoginService.LOGIN_PROCESS_FAILED));
+        registerReceiver(loginFailedReceiver, new IntentFilter(LoginService.LOGIN_PROCESS_FAILED));
 
-        receiver = new BroadcastReceiver() {
+        loginSucceededReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 progressDialog.dismiss();
@@ -122,12 +123,13 @@ public class LoginActivity extends AppCompatActivity {
             }
         };
 
-        registerReceiver(receiver, new IntentFilter(LoginService.LOGIN_PROCESS_FINISHED));
+        registerReceiver(loginSucceededReceiver, new IntentFilter(LoginService.LOGIN_PROCESS_FINISHED));
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(receiver);
+        unregisterReceiver(loginFailedReceiver);
+        unregisterReceiver(loginSucceededReceiver);
     }
 }
