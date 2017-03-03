@@ -50,7 +50,6 @@ public class PlayersService {
     // Default strings for broadcast
     // We use this because the request is assynchronous
     public static final String LOADING_PLAYERS_FINISHED = "loading_players_finished";
-    public static final String PLAYERS_LIST_CHANGED = "players_list_changed";
     public static final String PLAYER_DRAFTED = "players_drafted";
     public static final String TEAM_LIST_CHANGED = "team_list_changed";
 

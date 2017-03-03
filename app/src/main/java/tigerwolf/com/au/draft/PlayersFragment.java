@@ -28,7 +28,6 @@ import tigerwolf.com.au.draft.utils.PlayersService;
 public class PlayersFragment extends Fragment {
 
     private BroadcastReceiver playerListLoadedReceiver;
-    private BroadcastReceiver playerListUpdatedReceiver;
     private BroadcastReceiver playerDrafted;
 
     private PlayersAdapter playersAdapter;
@@ -152,13 +151,6 @@ public class PlayersFragment extends Fragment {
             }
         };
 
-        playerListUpdatedReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                playersAdapter.notifyDataSetChanged();
-            }
-        };
-
         playerDrafted = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -172,7 +164,6 @@ public class PlayersFragment extends Fragment {
         };
 
         getActivity().registerReceiver(playerListLoadedReceiver, new IntentFilter(PlayersService.LOADING_PLAYERS_FINISHED));
-        getActivity().registerReceiver(playerListUpdatedReceiver, new IntentFilter(PlayersService.PLAYERS_LIST_CHANGED));
         getActivity().registerReceiver(playerDrafted, new IntentFilter(PlayersService.PLAYER_DRAFTED));
     }
 
