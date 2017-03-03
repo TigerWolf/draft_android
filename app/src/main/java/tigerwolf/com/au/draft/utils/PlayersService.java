@@ -2,6 +2,7 @@ package tigerwolf.com.au.draft.utils;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -18,6 +19,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
+import okio.ByteString;
 import tigerwolf.com.au.draft.models.Player;
 
 import com.google.gson.JsonElement;
@@ -223,6 +227,45 @@ public class PlayersService {
                 }
             }
         }).start();
+    }
+
+    public void createPlayersSocket() {
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url("http://challengecup.club:8080/socket/websocket")
+                .build();
+        WebSocketListener listener = new WebSocketListener() {
+            @Override
+            public void onMessage(WebSocket webSocket, String text) {
+                super.onMessage(webSocket, text);
+                Log.d("DRAFT", "WebSocket - Message received: " + text);
+            }
+
+            @Override
+            public void onOpen(WebSocket webSocket, Response response) {
+                super.onOpen(webSocket, response);
+                Log.d("DRAFT", "WebSocket open!");
+            }
+
+            @Override
+            public void onClosed(WebSocket webSocket, int code, String reason) {
+                super.onClosed(webSocket, code, reason);
+                Log.d("DRAFT", "WebSocket closed");
+            }
+
+            @Override
+            public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+                super.onFailure(webSocket, t, response);
+                Log.d("DRAFT", "WebSocket failed!");
+            }
+
+            @Override
+            public void onMessage(WebSocket webSocket, ByteString bytes) {
+                super.onMessage(webSocket, bytes);
+                Log.d("DRAFT", "WebSocket - ByteString received: " + bytes);
+            }
+        };
+        WebSocket ws = client.newWebSocket(request, listener);
     }
 
     /**
