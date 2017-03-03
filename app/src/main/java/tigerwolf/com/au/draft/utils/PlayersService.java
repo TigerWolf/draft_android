@@ -83,7 +83,7 @@ public class PlayersService {
                     ex.printStackTrace();
                 } finally {
                     // After requesting player's list, load the drafted ones
-                    refreshDraftedPlayers(context, RequestType.LOAD_PLAYERS);
+                    refreshDraftStatusOfPlayerList(context, RequestType.LOAD_PLAYERS);
                     // Loads the team list
                     loadMyTeam(context);
                 }
@@ -96,7 +96,7 @@ public class PlayersService {
      * @param context
      * @param requestType The type of the request that called this function. It's used to broadcast the correct String.
      */
-    public void refreshDraftedPlayers(final Context context, final RequestType requestType) {
+    public void refreshDraftStatusOfPlayerList(final Context context, final RequestType requestType) {
         (new Thread() {
             @Override
             public void run() {
@@ -178,7 +178,7 @@ public class PlayersService {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 } finally {
-                    refreshDraftedPlayers(context, RequestType.DRAFT_PLAYER);
+                    refreshDraftStatusOfPlayerList(context, RequestType.DRAFT_PLAYER);
                     loadMyTeam(context);
                 }
             }
