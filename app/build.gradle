@@ -17,6 +17,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+    }
 }
 
 dependencies {
@@ -28,6 +31,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
 
     // OkHttp
+    compile 'com.squareup.okhttp3:okhttp-ws:3.4.1'
     compile 'com.squareup.okhttp3:okhttp:3.6.0'
 
     // Assync image loader
@@ -42,6 +46,10 @@ dependencies {
 
     // TabLayout
     compile 'com.android.support:design:24.2.1'
+
+    // Sockets
+    compile 'com.github.eoinsha:JavaPhoenixChannels:0.2'
+
 
     // FontAwesome
     compile 'com.joanzapata.iconify:android-iconify-fontawesome:2.2.2' // (v4.5)

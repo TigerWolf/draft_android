@@ -53,7 +53,7 @@ public class PlayersFragment extends Fragment {
         // Loads data
         this.reloadPlayersList();
 
-        PlayersService.getInstance().createPlayersSocket();
+        PlayersService.getInstance().createPlayersSocket_OkHttp();
 
         return view;
     }

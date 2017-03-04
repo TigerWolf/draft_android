@@ -4,9 +4,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,6 +32,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+
+import org.phoenixframework.channels.Channel;
+import org.phoenixframework.channels.ChannelEvent;
+import org.phoenixframework.channels.Envelope;
+import org.phoenixframework.channels.IErrorCallback;
+import org.phoenixframework.channels.IMessageCallback;
+import org.phoenixframework.channels.Socket;
 
 /**
  * Created by Henrique on 10/02/2017.
@@ -230,6 +241,58 @@ public class PlayersService {
     }
 
     public void createPlayersSocket() {
+        Socket socket;
+        Channel channel;
+
+        try {
+            socket = new Socket("http://challengecup.club:8080/socket/websocket");
+            socket.connect();
+
+            ObjectNode node = new ObjectNode(JsonNodeFactory.instance)
+                    .put("user", "spartacus");
+
+            channel = socket.chan("rooms:lobby", node);
+
+            channel.join()
+                    .receive("ignore", new IMessageCallback() {
+                        @Override
+                        public void onMessage(Envelope envelope) {
+                            System.out.println("IGNORE");
+                        }
+                    })
+                    .receive("ok", new IMessageCallback() {
+                        @Override
+                        public void onMessage(Envelope envelope) {
+                            System.out.println("JOINED with " + envelope.toString());
+                        }
+                    });
+
+            channel.on("new:msg", new IMessageCallback() {
+                @Override
+                public void onMessage(Envelope envelope) {
+                    System.out.println("NEW MESSAGE: " + envelope.toString());
+                }
+            });
+
+            channel.on(ChannelEvent.CLOSE.getPhxEvent(), new IMessageCallback() {
+                @Override
+                public void onMessage(Envelope envelope) {
+                    System.out.println("CLOSED: " + envelope.toString());
+                }
+            });
+
+            channel.on(ChannelEvent.ERROR.getPhxEvent(), new IMessageCallback() {
+                @Override
+                public void onMessage(Envelope envelope) {
+                    System.out.println("ERROR: " + envelope.toString());
+                }
+            });
+        }  catch (IOException e) {
+            Log.d(PlayersService.class.getName(),  e.getMessage());
+        }
+    }
+
+    public void createPlayersSocket_OkHttp() {
         OkHttpClient client = new OkHttpClient();
         Request request = new Request.Builder()
                 .url("http://challengecup.club:8080/socket/websocket")
