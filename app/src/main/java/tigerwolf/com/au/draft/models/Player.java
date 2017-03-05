@@ -116,10 +116,6 @@ public class Player implements Comparable<Player> {
         this.drafted = drafted;
     }
 
-    public void toggleDrafted() {
-        this.drafted = ! this.drafted;
-    }
-
     @Override
     public int compareTo(Player o) {
         String myName = givenName + " " + surname;

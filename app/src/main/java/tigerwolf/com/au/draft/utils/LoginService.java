@@ -93,6 +93,10 @@ public class LoginService {
         }).start();
     }
 
+    public void logout() {
+        this.token.clearToken();
+    }
+
     /**
      * Returns user and password in JSON format
      * @param user user's login

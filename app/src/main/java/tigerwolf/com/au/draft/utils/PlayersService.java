@@ -50,7 +50,6 @@ public class PlayersService {
     // Default strings for broadcast
     // We use this because the request is assynchronous
     public static final String LOADING_PLAYERS_FINISHED = "loading_players_finished";
-    public static final String PLAYERS_LIST_CHANGED = "players_list_changed";
     public static final String PLAYER_DRAFTED = "players_drafted";
     public static final String TEAM_LIST_CHANGED = "team_list_changed";
 
@@ -84,7 +83,7 @@ public class PlayersService {
                     ex.printStackTrace();
                 } finally {
                     // After requesting player's list, load the drafted ones
-                    refreshDraftedPlayers(context, RequestType.LOAD_PLAYERS);
+                    refreshDraftStatusOfPlayerList(context, RequestType.LOAD_PLAYERS);
                     // Loads the team list
                     loadMyTeam(context);
                 }
@@ -97,7 +96,7 @@ public class PlayersService {
      * @param context
      * @param requestType The type of the request that called this function. It's used to broadcast the correct String.
      */
-    public void refreshDraftedPlayers(final Context context, final RequestType requestType) {
+    public void refreshDraftStatusOfPlayerList(final Context context, final RequestType requestType) {
         (new Thread() {
             @Override
             public void run() {
@@ -179,7 +178,7 @@ public class PlayersService {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 } finally {
-                    refreshDraftedPlayers(context, RequestType.DRAFT_PLAYER);
+                    refreshDraftStatusOfPlayerList(context, RequestType.DRAFT_PLAYER);
                     loadMyTeam(context);
                 }
             }
@@ -203,7 +202,7 @@ public class PlayersService {
                     JsonParser parser = new JsonParser();
                     JsonObject rootObj = parser.parse(json).getAsJsonObject();
 
-                    clearDraftedStatusCache();
+                    clearTeamStatusCache();
 
                     // For each element in the data array
                     for(JsonElement e : rootObj.getAsJsonArray("data")) {
@@ -242,7 +241,7 @@ public class PlayersService {
 
     /**
      * Function that drafts a player. It posts a request to the server and then refresh the draft status
-     * of all players calling the function "refreshDraftedPlayers"
+     * of all players calling the function "refreshDraftStatusOfPlayerList"
      * @param player playerId and playerPositions
      * @param context
      */
@@ -261,6 +260,15 @@ public class PlayersService {
     private void clearDraftedStatusCache() {
         for (Player p : playerList) {
             p.setDrafted(false);
+        }
+    }
+
+    /**
+     * Clears the team status of all players in the playerList
+     */
+    private void clearTeamStatusCache() {
+        for (Player p : playerList) {
+            p.setMyTeam(false);
         }
     }
 

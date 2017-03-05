@@ -14,6 +14,7 @@ import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -22,13 +23,13 @@ import android.widget.ListView;
 import java.util.List;
 
 import tigerwolf.com.au.draft.models.Player;
+import tigerwolf.com.au.draft.utils.LoginService;
 import tigerwolf.com.au.draft.utils.PlayersAdapter;
 import tigerwolf.com.au.draft.utils.PlayersService;
 
 public class PlayersFragment extends Fragment {
 
     private BroadcastReceiver playerListLoadedReceiver;
-    private BroadcastReceiver playerListUpdatedReceiver;
     private BroadcastReceiver playerDrafted;
 
     private PlayersAdapter playersAdapter;
@@ -66,7 +67,7 @@ public class PlayersFragment extends Fragment {
         this.progressDialog.show();
     }
 
-    private void createConfirmationDialog(String message, final int position) {
+    private void createDraftConfirmationDialog(String message, final int position) {
         this.confirmDialogBuilder = new AlertDialog.Builder(getContext());
         this.confirmDialogBuilder.setTitle("Draft");
         this.confirmDialogBuilder.setMessage(message);
@@ -84,6 +85,29 @@ public class PlayersFragment extends Fragment {
                 dialog.dismiss();
             }
         });
+    }
+
+    private void createLogoutConfirmationDialog(String message) {
+        this.confirmDialogBuilder = new AlertDialog.Builder(getContext());
+        this.confirmDialogBuilder.setTitle("Logout");
+        this.confirmDialogBuilder.setMessage(message);
+
+        this.confirmDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                logout();
+            }
+        });
+
+        this.confirmDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        AlertDialog alertDialog = this.confirmDialogBuilder.create();
+        alertDialog.show();
     }
 
     private void displayInformationDialog(String message) {
@@ -117,7 +141,7 @@ public class PlayersFragment extends Fragment {
                     return;
                 }
 
-                createConfirmationDialog(message, pos);
+                createDraftConfirmationDialog(message, pos);
                 AlertDialog alertDialog = confirmDialogBuilder.create();
                 alertDialog.show();
             }
@@ -140,6 +164,15 @@ public class PlayersFragment extends Fragment {
         }
     }
 
+    private void logout() {
+        LoginService.getInstance().logout();
+
+        Intent i = new Intent(getActivity(), LoginActivity.class);
+        startActivity(i);
+
+        getActivity().finish();
+    }
+
     @Override
     public void onResume() {
         super.onResume();
@@ -149,13 +182,6 @@ public class PlayersFragment extends Fragment {
             public void onReceive(Context context, Intent intent) {
                 progressDialog.dismiss();
                 linkListViewPlayers();
-            }
-        };
-
-        playerListUpdatedReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                playersAdapter.notifyDataSetChanged();
             }
         };
 
@@ -172,7 +198,6 @@ public class PlayersFragment extends Fragment {
         };
 
         getActivity().registerReceiver(playerListLoadedReceiver, new IntentFilter(PlayersService.LOADING_PLAYERS_FINISHED));
-        getActivity().registerReceiver(playerListUpdatedReceiver, new IntentFilter(PlayersService.PLAYERS_LIST_CHANGED));
         getActivity().registerReceiver(playerDrafted, new IntentFilter(PlayersService.PLAYER_DRAFTED));
     }
 
@@ -217,5 +242,16 @@ public class PlayersFragment extends Fragment {
             @Override
             public void onViewAttachedToWindow(View arg0) {}
         });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.logout:
+                createLogoutConfirmationDialog("Are you sure you want to logout?");
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }
