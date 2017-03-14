@@ -156,11 +156,11 @@ public class PlayersFragment extends Fragment {
     private void handleSearch(String value) {
         // Clears
         if (value == null) {
-            List<Player> players = PlayersService.getInstance().playerList;
-            playersAdapter.updatePlayers(players);
+            this.players = PlayersService.getInstance().playerList;
+            playersAdapter.updatePlayers(this.players);
         } else {
-            List<Player> filteredPlayers = PlayersService.getInstance().getFilteredPlayers(value);
-            playersAdapter.updatePlayers(filteredPlayers);
+            this.players = PlayersService.getInstance().getFilteredPlayers(value);
+            playersAdapter.updatePlayers(this.players);
         }
     }
 
