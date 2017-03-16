@@ -84,7 +84,8 @@ public class PlayersAdapter extends BaseAdapter {
         }
 
         // Assync image loading
-        if (player.getPhotoURL() == null) {
+//        if (player.getPhotoURL() == null) {
+        if (true) { //Temp to remove content for approval.
             displayLoadingSpinner(holder, false);
             holder.imageViewPlayer.setImageDrawable(createErrorDrawable());
         } else {
